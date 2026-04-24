@@ -22,6 +22,7 @@ create table if not exists public.ai_sites (
   name text not null,
   url text not null,
   category text not null default '其他',
+  tags text[] not null default array['其他'],
   url_normalized text,
   domain_normalized text,
   sort_order integer not null default 1,
@@ -31,9 +32,16 @@ create table if not exists public.ai_sites (
 alter table public.ai_sites
 add column if not exists category text not null default '其他';
 
+alter table public.ai_sites
+add column if not exists tags text[] not null default array['其他'];
+
 update public.ai_sites
 set category = '其他'
 where category is null or btrim(category) = '';
+
+update public.ai_sites
+set tags = array[category]
+where tags is null or array_length(tags, 1) is null;
 
 insert into public.ai_categories (name, sort_order)
 select distinct category, 1000 + row_number() over (order by category)

@@ -7,18 +7,18 @@
   <style>
     :root {
       --bg: #07111f;
-      --bg-2: #0c1a2f;
-      --panel: rgba(8, 20, 37, 0.82);
-      --panel-strong: rgba(10, 25, 46, 0.95);
-      --card: rgba(10, 24, 42, 0.9);
-      --line: rgba(96, 151, 255, 0.26);
-      --line-strong: rgba(74, 213, 255, 0.42);
+      --bg-2: #0d1830;
+      --panel: rgba(9, 20, 38, 0.88);
+      --panel-strong: rgba(11, 24, 45, 0.96);
+      --card: rgba(10, 24, 43, 0.94);
+      --line: rgba(90, 160, 255, 0.22);
+      --line-strong: rgba(74, 213, 255, 0.5);
       --text: #ebf4ff;
-      --muted: #91a6c4;
+      --muted: #8fa6c7;
       --accent: #4ad5ff;
-      --accent-2: #6e7bff;
-      --danger: #ff667a;
-      --success: #72f0c7;
+      --accent-2: #6f7dff;
+      --danger: #ff6a7f;
+      --success: #78f1d0;
       --shadow: 0 22px 60px rgba(0, 0, 0, 0.34);
     }
 
@@ -32,10 +32,10 @@
       font-family: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
       color: var(--text);
       background:
-        radial-gradient(circle at top left, rgba(74, 213, 255, 0.14), transparent 28%),
-        radial-gradient(circle at top right, rgba(110, 123, 255, 0.14), transparent 24%),
-        linear-gradient(180deg, #050b14 0%, #07111f 45%, #091628 100%);
-      padding: 34px 18px 56px;
+        radial-gradient(circle at top left, rgba(74, 213, 255, 0.16), transparent 26%),
+        radial-gradient(circle at top right, rgba(111, 125, 255, 0.14), transparent 24%),
+        linear-gradient(180deg, #040912 0%, #07111f 48%, #09172a 100%);
+      padding: 24px 16px 42px;
     }
 
     body::before {
@@ -45,48 +45,134 @@
       background-image:
         linear-gradient(rgba(74, 213, 255, 0.05) 1px, transparent 1px),
         linear-gradient(90deg, rgba(74, 213, 255, 0.05) 1px, transparent 1px);
-      background-size: 36px 36px;
-      mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.7), transparent 92%);
+      background-size: 34px 34px;
+      mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.78), transparent 94%);
       pointer-events: none;
     }
 
-    .page {
+    .layout {
       position: relative;
       z-index: 1;
-      max-width: 1400px;
+      max-width: 1500px;
       margin: 0 auto;
+      display: grid;
+      grid-template-columns: 280px minmax(0, 1fr);
+      gap: 20px;
+      align-items: start;
     }
 
-    .hero {
-      padding: 28px;
+    .sidebar,
+    .hero,
+    .tabs-panel,
+    .column,
+    .modal-panel {
       border: 1px solid var(--line);
-      border-radius: 28px;
-      background: linear-gradient(180deg, rgba(9, 22, 40, 0.96), rgba(7, 17, 31, 0.88));
       box-shadow: var(--shadow);
+      background: linear-gradient(180deg, rgba(10, 23, 42, 0.96), rgba(7, 18, 34, 0.9));
       backdrop-filter: blur(16px);
     }
 
-    h1 {
+    .sidebar {
+      position: sticky;
+      top: 24px;
+      border-radius: 26px;
+      padding: 22px;
+      overflow: hidden;
+    }
+
+    .sidebar::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(74, 213, 255, 0.08), transparent 48%);
+      pointer-events: none;
+    }
+
+    .sidebar h2,
+    .hero h1 {
       margin: 0;
-      font-size: clamp(2.3rem, 6vw, 4.7rem);
-      line-height: 1.02;
+    }
+
+    .brand {
+      font-size: 0.86rem;
+      color: var(--accent);
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+
+    .sidebar h2 {
+      margin-top: 10px;
+      font-size: 1.65rem;
+      line-height: 1.2;
+    }
+
+    .sidebar p {
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    .qq-card,
+    .sidebar-box {
+      position: relative;
+      margin-top: 16px;
+      border-radius: 20px;
+      padding: 16px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(90, 160, 255, 0.12);
+    }
+
+    .qq-label,
+    .sidebar-box-title {
+      color: var(--muted);
+      font-size: 0.86rem;
+    }
+
+    .qq-number {
+      margin-top: 8px;
+      font-size: 1.16rem;
+      color: var(--text);
+      word-break: break-all;
+    }
+
+    .sidebar-note {
+      margin-top: 12px;
+      font-size: 0.88rem;
+      color: #6f87ac;
+    }
+
+    .main {
+      min-width: 0;
+    }
+
+    .hero {
+      border-radius: 28px;
+      padding: 28px;
+    }
+
+    .hero h1 {
+      font-size: clamp(2.2rem, 5vw, 4.6rem);
+      line-height: 1.03;
       letter-spacing: 0.06em;
       text-transform: uppercase;
     }
 
     .subtitle {
       margin: 14px 0 0;
-      max-width: 820px;
+      max-width: 840px;
       color: var(--muted);
-      line-height: 1.7;
+      line-height: 1.72;
     }
 
-    .panel-row {
+    .form-grid {
       margin-top: 24px;
       display: grid;
-      gap: 14px;
       grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 14px;
       align-items: end;
+    }
+
+    .full-span {
+      grid-column: 1 / -1;
     }
 
     label {
@@ -101,7 +187,7 @@
       padding: 14px 16px;
       border-radius: 16px;
       border: 1px solid var(--line);
-      background: rgba(7, 17, 31, 0.88);
+      background: rgba(6, 16, 31, 0.92);
       color: var(--text);
       outline: none;
       transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
@@ -114,7 +200,7 @@
     }
 
     input::placeholder {
-      color: #6780a7;
+      color: #6680a7;
     }
 
     button {
@@ -143,8 +229,9 @@
     }
 
     .secondary-button,
+    .ghost-button,
     .danger-button,
-    .ghost-button {
+    .icon-button {
       padding: 11px 14px;
       font-size: 0.92rem;
     }
@@ -160,7 +247,7 @@
     }
 
     .danger-button {
-      background: rgba(255, 102, 122, 0.12);
+      background: rgba(255, 106, 127, 0.12);
       color: var(--danger);
     }
 
@@ -168,9 +255,9 @@
       margin-top: 16px;
       display: flex;
       justify-content: space-between;
-      gap: 16px;
-      align-items: center;
+      gap: 14px;
       flex-wrap: wrap;
+      align-items: center;
     }
 
     .hint {
@@ -179,6 +266,7 @@
     }
 
     .status {
+      margin-top: 16px;
       min-height: 24px;
       color: var(--success);
       font-size: 0.95rem;
@@ -188,64 +276,139 @@
       color: var(--danger);
     }
 
+    .tabs-panel {
+      margin-top: 20px;
+      border-radius: 24px;
+      padding: 18px;
+    }
+
+    .tabs-title {
+      margin: 0 0 14px;
+      font-size: 1rem;
+      color: var(--muted);
+    }
+
+    .tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .selector-panel {
+      border: 1px solid rgba(90, 160, 255, 0.16);
+      border-radius: 18px;
+      padding: 14px;
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .selector-help {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 0.86rem;
+    }
+
+    .tag-selector {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .tag-option {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 12px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(90, 160, 255, 0.16);
+      cursor: pointer;
+      user-select: none;
+      color: var(--muted);
+      transition: border-color 0.18s ease, background 0.18s ease, color 0.18s ease;
+    }
+
+    .tag-option input {
+      width: auto;
+      margin: 0;
+      transform: scale(1.05);
+      accent-color: var(--accent);
+    }
+
+    .tag-option.selected {
+      color: var(--text);
+      border-color: rgba(74, 213, 255, 0.4);
+      background: linear-gradient(135deg, rgba(74, 213, 255, 0.18), rgba(111, 125, 255, 0.14));
+    }
+
+    .category-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(90, 160, 255, 0.16);
+      color: var(--muted);
+      cursor: pointer;
+      user-select: none;
+      transition: border-color 0.18s ease, background 0.18s ease, color 0.18s ease;
+    }
+
+    .category-chip.active {
+      color: var(--text);
+      border-color: rgba(74, 213, 255, 0.38);
+      background: linear-gradient(135deg, rgba(74, 213, 255, 0.18), rgba(111, 125, 255, 0.16));
+    }
+
+    .category-chip.dragging {
+      opacity: 0.52;
+    }
+
+    .chip-count {
+      color: #6f86aa;
+      font-size: 0.82rem;
+    }
+
+    .content {
+      margin-top: 20px;
+    }
+
     .board {
-      margin-top: 28px;
       display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
       gap: 18px;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
       align-items: start;
     }
 
-    .category-column {
-      display: flex;
-      flex-direction: column;
-      min-height: 220px;
-      border: 1px solid var(--line);
+    .column {
+      min-height: 260px;
       border-radius: 26px;
-      background: linear-gradient(180deg, rgba(10, 25, 46, 0.96), rgba(8, 20, 37, 0.9));
-      box-shadow: var(--shadow);
       overflow: hidden;
     }
 
-    .category-column.dragging {
-      opacity: 0.56;
-      transform: scale(0.985);
-    }
-
-    .category-column.drag-target {
-      border-color: var(--line-strong);
-      box-shadow: 0 0 0 2px rgba(74, 213, 255, 0.18), var(--shadow);
-    }
-
-    .category-header {
+    .column-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 12px;
-      padding: 18px 18px 12px;
-      border-bottom: 1px solid rgba(96, 151, 255, 0.14);
-      cursor: grab;
-      user-select: none;
-      background: linear-gradient(90deg, rgba(74, 213, 255, 0.06), rgba(110, 123, 255, 0.05));
+      padding: 18px 18px 14px;
+      border-bottom: 1px solid rgba(90, 160, 255, 0.12);
+      background: linear-gradient(90deg, rgba(74, 213, 255, 0.06), rgba(111, 125, 255, 0.05));
     }
 
-    .category-title-wrap {
-      min-width: 0;
-    }
-
-    .category-title {
+    .column-title {
       margin: 0;
-      font-size: 1.18rem;
+      font-size: 1.16rem;
       word-break: break-word;
     }
 
-    .category-count {
+    .column-meta {
       margin-top: 6px;
       color: var(--muted);
       font-size: 0.84rem;
     }
 
-    .category-actions {
+    .column-actions {
       display: flex;
       gap: 8px;
       flex-shrink: 0;
@@ -254,46 +417,37 @@
     .icon-button {
       width: 36px;
       height: 36px;
-      border-radius: 12px;
       padding: 0;
+      border-radius: 12px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
       background: rgba(255, 255, 255, 0.04);
       color: var(--text);
-      font-size: 0.92rem;
     }
 
     .icon-button.delete {
+      background: rgba(255, 106, 127, 0.08);
       color: var(--danger);
-      background: rgba(255, 102, 122, 0.08);
     }
 
-    .category-dropzone {
-      min-height: 140px;
+    .dropzone {
+      min-height: 180px;
       padding: 16px;
       display: grid;
       gap: 14px;
       align-content: start;
     }
 
-    .category-dropzone.drag-target {
+    .dropzone.drag-target {
       background: rgba(74, 213, 255, 0.05);
-    }
-
-    .empty-category {
-      padding: 22px 14px;
-      text-align: center;
-      color: #6f86aa;
-      border: 1px dashed rgba(96, 151, 255, 0.22);
-      border-radius: 18px;
     }
 
     .site-card {
       position: relative;
       padding: 18px;
       border-radius: 22px;
-      border: 1px solid rgba(96, 151, 255, 0.18);
+      border: 1px solid rgba(90, 160, 255, 0.16);
       background: linear-gradient(180deg, rgba(12, 28, 49, 0.96), rgba(8, 20, 37, 0.92));
       box-shadow: 0 16px 36px rgba(0, 0, 0, 0.24);
       cursor: grab;
@@ -342,12 +496,18 @@
       text-decoration: underline;
     }
 
-    .site-category {
-      display: inline-flex;
+    .site-tags {
       margin-top: 12px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .site-tag {
+      display: inline-flex;
       padding: 5px 10px;
       border-radius: 999px;
-      background: rgba(110, 123, 255, 0.16);
+      background: rgba(111, 125, 255, 0.16);
       color: #c7ceff;
       font-size: 0.78rem;
       font-weight: 700;
@@ -363,14 +523,22 @@
       font-size: 0.82rem;
     }
 
-    .empty-state {
-      margin-top: 24px;
-      padding: 26px;
-      border: 1px dashed rgba(96, 151, 255, 0.28);
-      border-radius: 22px;
-      text-align: center;
+    .empty-state,
+    .empty-column {
+      border: 1px dashed rgba(90, 160, 255, 0.22);
+      border-radius: 20px;
       color: var(--muted);
-      background: rgba(8, 20, 37, 0.72);
+      background: rgba(255, 255, 255, 0.02);
+      text-align: center;
+    }
+
+    .empty-state {
+      margin-top: 20px;
+      padding: 26px;
+    }
+
+    .empty-column {
+      padding: 22px 14px;
     }
 
     .modal {
@@ -392,20 +560,17 @@
       width: min(100%, 460px);
       padding: 24px;
       border-radius: 24px;
-      border: 1px solid var(--line);
-      background: var(--panel-strong);
-      box-shadow: var(--shadow);
     }
 
     .modal-title {
       margin: 0;
-      font-size: 1.26rem;
+      font-size: 1.24rem;
     }
 
     .modal-subtitle {
       margin: 10px 0 18px;
       color: var(--muted);
-      line-height: 1.65;
+      line-height: 1.7;
       word-break: break-word;
     }
 
@@ -416,13 +581,21 @@
       gap: 10px;
     }
 
-    @media (max-width: 720px) {
-      body {
-        padding: 20px 14px 40px;
+    @media (max-width: 1080px) {
+      .layout {
+        grid-template-columns: 1fr;
       }
 
-      .hero {
-        padding: 22px;
+      .sidebar {
+        position: static;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .hero,
+      .tabs-panel,
+      .sidebar {
+        padding: 20px;
       }
 
       .site-name {
@@ -436,59 +609,89 @@
       }
 
       .site-meta,
-      .modal-actions {
+      .modal-actions,
+      .toolbar {
         flex-direction: column;
-        align-items: flex-start;
-      }
-
-      .category-header {
         align-items: flex-start;
       }
     }
   </style>
 </head>
 <body>
-  <main class="page">
-    <section class="hero">
-      <h1>十三的AI聚集站</h1>
-      <p class="subtitle">共享收录、跨分类拖拽、分类独立排序。现在所有分类和网站都能直接在页面里增删改排。</p>
+  <main class="layout">
+    <aside class="sidebar">
+      <div class="brand">AI NAV HUB</div>
+      <h2>十三的AI聚集站</h2>
+      <p>默认优先展示 Gemini 和 GPT。顶部标签可动态切换到“其他”或任意自定义分类，内容区会实时替换显示。</p>
 
-      <form id="siteForm" class="panel-row">
-        <div>
-          <label for="siteName">网站名字</label>
-          <input id="siteName" type="text" placeholder="例如：ChatGPT">
-        </div>
-        <div>
-          <label for="siteUrl">网站网址</label>
-          <input id="siteUrl" type="text" inputmode="url" placeholder="https://example.com 或 example.com" required>
-        </div>
-        <div>
-          <label for="siteCategory">网站分类</label>
-          <input id="siteCategory" type="text" list="categoryOptions" placeholder="GPT / Gemini / 其他 / 自定义">
-        </div>
-        <button id="submitButton" class="submit-button" type="submit">加入聚集站</button>
-      </form>
-
-      <div class="toolbar">
-        <div class="hint">拖动分类头可调整分类顺序。拖动网站卡片可跨分类移动。点击网站卡片可修改分类。</div>
-        <button id="addCategoryButton" class="secondary-button" type="button">新增分类</button>
+      <div class="qq-card">
+        <div class="qq-label">客服 QQ</div>
+        <div class="qq-number">3968509102</div>
       </div>
 
-      <div id="status" class="status" aria-live="polite"></div>
-    </section>
+      <div class="sidebar-box">
+        <div class="sidebar-box-title">使用说明</div>
+        <p>我们是纯正的AI资源核心源头商，直接供应 ChatGPT、Gemini、Claude 等全球主流顶尖大模型（支持各种规格的会员号及高并发API中转）</p>
+      </div>
 
-    <section id="emptyState" class="empty-state">还没有收录网站，先添加一个网站或分类。</section>
-    <section id="siteBoard" class="board" aria-live="polite"></section>
+      <div class="sidebar-note">稳定+AI模型源头</div>
+    </aside>
+
+    <section class="main">
+      <section class="hero">
+        <h1>十三的AI聚集站</h1>
+        <p class="subtitle">共享收录、动态分类、暗黑科技风展示。默认显示 Gemini 和 GPT，点击顶部标签即可切到其他或自定义分类。</p>
+
+        <form id="siteForm" class="form-grid">
+          <div>
+            <label for="siteName">网站名字</label>
+            <input id="siteName" type="text" placeholder="例如：ChatGPT">
+          </div>
+          <div>
+            <label for="siteUrl">网站网址</label>
+            <input id="siteUrl" type="text" inputmode="url" placeholder="https://example.com 或 example.com" required>
+          </div>
+          <div class="full-span">
+            <label>网站标签</label>
+            <div class="selector-panel">
+              <div id="siteTagSelector" class="tag-selector"></div>
+              <div class="selector-help">网站标签只能从现有标签中选择。一个网站可以同时属于多个标签。</div>
+            </div>
+          </div>
+          <button id="submitButton" class="submit-button" type="submit">加入聚集站</button>
+        </form>
+
+        <div class="toolbar">
+          <div class="hint">默认显示 `Gemini` 与 `GPT`。点击新标签时，会按“新的替换最旧的一个标签”动态切换主页展示。</div>
+          <button id="addCategoryButton" class="secondary-button" type="button">新增分类</button>
+        </div>
+
+        <div id="status" class="status" aria-live="polite"></div>
+      </section>
+
+      <section class="tabs-panel">
+        <h2 class="tabs-title">顶部分类标签</h2>
+        <div id="categoryTabs" class="tabs"></div>
+      </section>
+
+      <section class="content">
+        <section id="emptyState" class="empty-state">还没有收录网站，先添加一个网站或分类。</section>
+        <section id="siteBoard" class="board" aria-live="polite"></section>
+      </section>
+    </section>
   </main>
 
   <datalist id="categoryOptions"></datalist>
 
   <div id="categoryModal" class="modal" hidden>
     <div class="modal-panel">
-      <h2 class="modal-title">修改网站分类</h2>
+      <h2 class="modal-title">修改网站标签</h2>
       <p id="categoryModalSubtitle" class="modal-subtitle"></p>
-      <label for="modalCategoryInput">分类名称</label>
-      <input id="modalCategoryInput" type="text" list="categoryOptions" placeholder="输入已有分类或新分类">
+      <label>网站标签</label>
+      <div class="selector-panel">
+        <div id="modalTagSelector" class="tag-selector"></div>
+        <div class="selector-help">从现有标签中选择，一个网站可以勾选多个标签。</div>
+      </div>
       <div class="modal-actions">
         <button id="modalCancelButton" class="ghost-button" type="button">取消</button>
         <button id="modalSaveButton" class="submit-button" type="button">保存</button>
@@ -499,7 +702,7 @@
   <div id="newCategoryModal" class="modal" hidden>
     <div class="modal-panel">
       <h2 class="modal-title">新增分类</h2>
-      <p class="modal-subtitle">输入新的分类名称，创建后即可拖拽排序，也能把网站移入其中。</p>
+      <p class="modal-subtitle">输入新的分类名称，创建后它会自动出现在顶部标签区。</p>
       <label for="newCategoryInput">分类名称</label>
       <input id="newCategoryInput" type="text" placeholder="例如：Claude">
       <div class="modal-actions">
@@ -515,17 +718,18 @@
     const siteForm = document.getElementById("siteForm");
     const siteNameInput = document.getElementById("siteName");
     const siteUrlInput = document.getElementById("siteUrl");
-    const siteCategoryInput = document.getElementById("siteCategory");
     const submitButton = document.getElementById("submitButton");
     const siteBoard = document.getElementById("siteBoard");
     const emptyState = document.getElementById("emptyState");
     const statusNode = document.getElementById("status");
     const categoryOptions = document.getElementById("categoryOptions");
+    const categoryTabs = document.getElementById("categoryTabs");
     const addCategoryButton = document.getElementById("addCategoryButton");
+    const siteTagSelector = document.getElementById("siteTagSelector");
 
     const categoryModal = document.getElementById("categoryModal");
     const categoryModalSubtitle = document.getElementById("categoryModalSubtitle");
-    const modalCategoryInput = document.getElementById("modalCategoryInput");
+    const modalTagSelector = document.getElementById("modalTagSelector");
     const modalCancelButton = document.getElementById("modalCancelButton");
     const modalSaveButton = document.getElementById("modalSaveButton");
 
@@ -537,13 +741,14 @@
     const config = window.APP_CONFIG || {};
     const supabaseUrl = config.supabaseUrl;
     const supabaseAnonKey = config.supabaseAnonKey;
-    const defaultCategories = ["GPT", "Gemini", "其他"];
+    const defaultCategories = ["Gemini", "GPT", "其他"];
 
-    let supabase = null;
+    let db = null;
     let categoriesState = [];
     let sitesState = [];
+    let activeTagQueue = ["Gemini", "GPT"];
     let draggedSite = null;
-    let draggedCategory = null;
+    let draggedChip = null;
     let editingSite = null;
     let isSavingSiteOrder = false;
     let isSavingCategoryOrder = false;
@@ -617,8 +822,55 @@
       }
     }
 
+    function getCategoryCount(name) {
+      return sitesState.filter((site) => Array.isArray(site.tags) && site.tags.includes(name)).length;
+    }
+
+    function normalizeSiteTags(tags) {
+      const safe = Array.isArray(tags) ? tags : [];
+      const deduped = [...new Set(safe.map((tag) => normalizeCategory(tag)).filter(Boolean))];
+      return deduped.length > 0 ? deduped : ["其他"];
+    }
+
+    function ensureActiveTagQueue() {
+      const names = categoriesState.map((category) => category.name);
+      let queue = activeTagQueue.filter((tag) => names.includes(tag));
+
+      if (queue.length === 0 && names.length > 0) {
+        if (names.includes("Gemini")) queue.push("Gemini");
+        if (names.includes("GPT")) queue.push("GPT");
+      }
+
+      if (queue.length < 2) {
+        names.forEach((name) => {
+          if (!queue.includes(name) && queue.length < 2) {
+            queue.push(name);
+          }
+        });
+      }
+
+      if (queue.length === 0) {
+        queue = ["Gemini", "GPT"];
+      }
+
+      activeTagQueue = queue.slice(0, 2);
+      return activeTagQueue;
+    }
+
+    function activateTag(tagName) {
+      if (!tagName) return;
+      const queue = ensureActiveTagQueue().filter((tag) => tag !== tagName);
+      queue.push(tagName);
+      activeTagQueue = queue.slice(-2);
+    }
+
+    function getVisibleCategories() {
+      return ensureActiveTagQueue();
+    }
+
     function updateEmptyState() {
       emptyState.hidden = categoriesState.length > 0 || sitesState.length > 0;
+      siteBoard.hidden = categoriesState.length === 0 && sitesState.length === 0;
     }
 
     function refreshCategoryOptions() {
@@ -630,13 +882,43 @@
       });
     }
 
+    function createTagSelector(container, selectedTags) {
+      const selected = new Set(normalizeSiteTags(selectedTags));
+      container.innerHTML = "";
+
+      categoriesState.forEach((category) => {
+        const label = document.createElement("label");
+        label.className = `tag-option${selected.has(category.name) ? " selected" : ""}`;
+
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.value = category.name;
+        checkbox.checked = selected.has(category.name);
+
+        checkbox.addEventListener("change", () => {
+          label.classList.toggle("selected", checkbox.checked);
+        });
+
+        const text = document.createElement("span");
+        text.textContent = category.name;
+
+        label.append(checkbox, text);
+        container.appendChild(label);
+      });
+    }
+
+    function getSelectedTags(container) {
+      const selected = [...container.querySelectorAll("input[type='checkbox']:checked")].map((input) => input.value);
+      return normalizeSiteTags(selected);
+    }
+
     async function ensureCategoryExists(name) {
       const categoryName = normalizeCategory(name);
       const existing = categoriesState.find((item) => item.name === categoryName);
       if (existing) return existing;
 
       const nextSortOrder = categoriesState.length + 1;
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from("ai_categories")
         .insert({ name: categoryName, sort_order: nextSortOrder })
         .select("id, name, sort_order, created_at")
@@ -660,14 +942,14 @@
       setStatus("正在同步分类和网站...");
 
       const [{ data: categories, error: categoryError }, { data: sites, error: siteError }] = await Promise.all([
-        supabase
+        db
           .from("ai_categories")
           .select("id, name, sort_order, created_at")
           .order("sort_order", { ascending: true })
           .order("created_at", { ascending: true }),
-        supabase
+        db
           .from("ai_sites")
-          .select("id, name, url, category, sort_order, created_at")
+          .select("id, name, url, category, tags, sort_order, created_at")
           .order("sort_order", { ascending: true })
           .order("created_at", { ascending: true })
       ]);
@@ -683,10 +965,54 @@
       }
 
       categoriesState = categories || [];
-      sitesState = sites || [];
+      sitesState = (sites || []).map((site) => ({
+        ...site,
+        tags: normalizeSiteTags(site.tags)
+      }));
+      ensureActiveTagQueue();
       refreshCategoryOptions();
+      createTagSelector(siteTagSelector, getSelectedTags(siteTagSelector));
+      if (!categoryModal.hidden && editingSite) {
+        createTagSelector(modalTagSelector, editingSite.tags);
+      }
+      renderTabs();
       renderBoard();
       setStatus(`已同步 ${categoriesState.length} 个分类，${sitesState.length} 个网站。`);
+    }
+
+    function renderTabs() {
+      categoryTabs.innerHTML = "";
+      const activeNames = new Set(getVisibleCategories());
+
+      categoriesState.forEach((category) => {
+        const chip = document.createElement("button");
+        chip.className = `category-chip${activeNames.has(category.name) ? " active" : ""}`;
+        chip.type = "button";
+        chip.draggable = true;
+        chip.dataset.categoryId = category.id;
+        chip.dataset.category = category.name;
+
+        const label = document.createElement("span");
+        label.textContent = category.name;
+
+        const count = document.createElement("span");
+        count.className = "chip-count";
+        count.textContent = getCategoryCount(category.name);
+
+        chip.append(label, count);
+
+        chip.addEventListener("click", () => {
+          activateTag(category.name);
+          renderTabs();
+          renderBoard();
+        });
+
+        chip.addEventListener("dragstart", handleChipDragStart);
+        chip.addEventListener("dragend", handleChipDragEnd);
+        chip.addEventListener("dragover", handleChipDragOver);
+
+        categoryTabs.appendChild(chip);
+      });
     }
 
     function createSiteCard(site) {
@@ -694,7 +1020,7 @@
       card.className = "site-card";
       card.draggable = true;
       card.dataset.id = site.id;
-      card.dataset.category = site.category;
+      card.dataset.tags = JSON.stringify(normalizeSiteTags(site.tags));
 
       const title = document.createElement("h3");
       title.className = "site-name";
@@ -707,9 +1033,14 @@
       link.rel = "noopener noreferrer";
       link.textContent = site.url;
 
-      const tag = document.createElement("div");
-      tag.className = "site-category";
-      tag.textContent = site.category;
+      const tags = document.createElement("div");
+      tags.className = "site-tags";
+      normalizeSiteTags(site.tags).forEach((tagName) => {
+        const tag = document.createElement("div");
+        tag.className = "site-tag";
+        tag.textContent = tagName;
+        tags.appendChild(tag);
+      });
 
       const meta = document.createElement("div");
       meta.className = "site-meta";
@@ -726,7 +1057,7 @@
         deleteButton.disabled = true;
         setStatus("正在删除网站...");
 
-        const { error } = await supabase.from("ai_sites").delete().eq("id", site.id);
+        const { error } = await db.from("ai_sites").delete().eq("id", site.id);
         if (error) {
           deleteButton.disabled = false;
           setStatus(`删除失败：${error.message}`, true);
@@ -738,7 +1069,7 @@
       });
 
       meta.append(time, deleteButton);
-      card.append(title, link, tag, meta);
+      card.append(title, link, tags, meta);
 
       card.addEventListener("dragstart", handleSiteDragStart);
       card.addEventListener("dragend", handleSiteDragEnd);
@@ -746,63 +1077,58 @@
         if (event.target.closest("a") || event.target.closest("button")) return;
         editingSite = site;
         categoryModalSubtitle.textContent = `${site.name} · ${site.url}`;
-        modalCategoryInput.value = site.category;
+        createTagSelector(modalTagSelector, site.tags);
         categoryModal.hidden = false;
-        modalCategoryInput.focus();
-        modalCategoryInput.select();
       });
 
       return card;
     }
 
-    function createCategoryColumn(category) {
-      const section = document.createElement("section");
-      section.className = "category-column";
-      section.dataset.category = category.name;
-      section.dataset.categoryId = category.id;
-      section.draggable = true;
+    function createColumn(categoryName) {
+      const column = document.createElement("section");
+      column.className = "column";
+      column.dataset.category = categoryName;
 
       const header = document.createElement("div");
-      header.className = "category-header";
+      header.className = "column-header";
 
-      const titleWrap = document.createElement("div");
-      titleWrap.className = "category-title-wrap";
+      const info = document.createElement("div");
 
       const title = document.createElement("h2");
-      title.className = "category-title";
-      title.textContent = category.name;
+      title.className = "column-title";
+      title.textContent = categoryName;
 
-      const count = document.createElement("div");
-      count.className = "category-count";
-      const countNumber = sitesState.filter((site) => site.category === category.name).length;
-      count.textContent = `${countNumber} 个网站`;
+      const meta = document.createElement("div");
+      meta.className = "column-meta";
+      meta.textContent = `${getCategoryCount(categoryName)} 个网站`;
 
-      titleWrap.append(title, count);
+      info.append(title, meta);
 
       const actions = document.createElement("div");
-      actions.className = "category-actions";
+      actions.className = "column-actions";
 
       const renameButton = document.createElement("button");
       renameButton.className = "icon-button";
       renameButton.type = "button";
       renameButton.textContent = "改";
       renameButton.title = "修改分类名";
-      renameButton.addEventListener("click", async (event) => {
-        event.stopPropagation();
-        const newName = window.prompt("输入新的分类名", category.name);
+      renameButton.addEventListener("click", async () => {
+        const newName = window.prompt("输入新的分类名", categoryName);
         if (newName === null) return;
         const normalized = normalizeCategory(newName);
-        if (!normalized || normalized === category.name) return;
+        if (!normalized || normalized === categoryName) return;
 
-        const sameName = categoriesState.find((item) => item.name === normalized);
-        if (sameName) {
+        if (categoriesState.find((item) => item.name === normalized)) {
           setStatus("这个分类名已经存在。", true);
           return;
         }
 
         setStatus("正在修改分类名...");
 
-        const { error: categoryError } = await supabase
+        const category = categoriesState.find((item) => item.name === categoryName);
+        if (!category) return;
+
+        const { error: categoryError } = await db
           .from("ai_categories")
           .update({ name: normalized })
           .eq("id", category.id);
@@ -812,15 +1138,20 @@
           return;
         }
 
-        const { error: sitesError } = await supabase
-          .from("ai_sites")
-          .update({ category: normalized })
-          .eq("category", category.name);
-
-        if (sitesError) {
-          setStatus(`网站分类同步失败：${sitesError.message}`, true);
-          return;
+        const impactedSites = sitesState.filter((site) => site.tags.includes(categoryName));
+        for (const site of impactedSites) {
+          const nextTags = normalizeSiteTags(site.tags.map((tag) => tag === categoryName ? normalized : tag));
+          const { error } = await db.from("ai_sites").update({
+            tags: nextTags,
+            category: nextTags[0]
+          }).eq("id", site.id);
+          if (error) {
+            setStatus(`网站标签同步失败：${error.message}`, true);
+            return;
+          }
         }
+
+        activeTagQueue = activeTagQueue.map((tag) => tag === categoryName ? normalized : tag);
 
         await loadAllData();
         setStatus("分类名已更新。");
@@ -831,67 +1162,74 @@
       deleteButton.type = "button";
       deleteButton.textContent = "删";
       deleteButton.title = "删除分类";
-      deleteButton.addEventListener("click", async (event) => {
-        event.stopPropagation();
-        const countSites = sitesState.filter((site) => site.category === category.name).length;
-        const confirmed = window.confirm(`删除分类“${category.name}”后，该分类下 ${countSites} 个网站也会一起删除。继续吗？`);
+      deleteButton.addEventListener("click", async () => {
+        const countSites = getCategoryCount(categoryName);
+        const confirmed = window.confirm(`删除标签“${categoryName}”后，该标签会从 ${countSites} 个网站中移除；如果网站没有其他标签，会自动归入“其他”。继续吗？`);
         if (!confirmed) return;
 
-        setStatus("正在删除分类...");
+        setStatus("正在删除标签...");
 
-        const { error: sitesError } = await supabase.from("ai_sites").delete().eq("category", category.name);
-        if (sitesError) {
-          setStatus(`删除分类下网站失败：${sitesError.message}`, true);
-          return;
+        const impactedSites = sitesState.filter((site) => site.tags.includes(categoryName));
+        for (const site of impactedSites) {
+          const nextTags = normalizeSiteTags(site.tags.filter((tag) => tag !== categoryName));
+          const { error } = await db.from("ai_sites").update({
+            tags: nextTags,
+            category: nextTags[0]
+          }).eq("id", site.id);
+          if (error) {
+            setStatus(`网站标签移除失败：${error.message}`, true);
+            return;
+          }
         }
 
-        const { error: categoryError } = await supabase.from("ai_categories").delete().eq("id", category.id);
+        const category = categoriesState.find((item) => item.name === categoryName);
+        if (!category) return;
+
+        const { error: categoryError } = await db.from("ai_categories").delete().eq("id", category.id);
         if (categoryError) {
           setStatus(`删除分类失败：${categoryError.message}`, true);
           return;
         }
 
+        activeTagQueue = activeTagQueue.filter((tag) => tag !== categoryName);
+
         await loadAllData();
-        setStatus("分类已删除。");
+        setStatus("标签已删除。");
       });
 
       actions.append(renameButton, deleteButton);
-      header.append(titleWrap, actions);
-
-      header.addEventListener("dragstart", handleCategoryDragStart);
-      header.addEventListener("dragend", handleCategoryDragEnd);
-      section.addEventListener("dragover", handleCategoryDragOver);
-      section.addEventListener("dragenter", handleCategoryDragEnter);
-      section.addEventListener("dragleave", handleCategoryDragLeave);
-      section.addEventListener("drop", handleCategoryDrop);
+      header.append(info, actions);
 
       const dropzone = document.createElement("div");
-      dropzone.className = "category-dropzone";
-      dropzone.dataset.category = category.name;
+      dropzone.className = "dropzone";
+      dropzone.dataset.category = categoryName;
       dropzone.addEventListener("dragover", handleSiteDragOver);
       dropzone.addEventListener("dragenter", () => dropzone.classList.add("drag-target"));
       dropzone.addEventListener("dragleave", () => dropzone.classList.remove("drag-target"));
       dropzone.addEventListener("drop", () => dropzone.classList.remove("drag-target"));
 
-      const sites = sitesState.filter((site) => site.category === category.name);
+      const sites = sitesState.filter((site) => site.tags.includes(categoryName));
       if (sites.length === 0) {
         const empty = document.createElement("div");
-        empty.className = "empty-category";
-        empty.textContent = "把网站拖到这里，或者新增一个网站。";
+        empty.className = "empty-column";
+        empty.textContent = "这个分类暂时没有网站。";
         dropzone.appendChild(empty);
       } else {
         sites.forEach((site) => dropzone.appendChild(createSiteCard(site)));
       }
 
-      section.append(header, dropzone);
-      return section;
+      column.append(header, dropzone);
+      return column;
     }
 
     function renderBoard() {
       siteBoard.innerHTML = "";
+      const visibleCategories = getVisibleCategories();
 
-      categoriesState.forEach((category) => {
-        siteBoard.appendChild(createCategoryColumn(category));
+      visibleCategories.forEach((categoryName) => {
+        if (categoryName) {
+          siteBoard.appendChild(createColumn(categoryName));
+        }
       });
 
       updateEmptyState();
@@ -904,10 +1242,11 @@
 
       const cards = [...siteBoard.querySelectorAll(".site-card")];
       const updates = cards.map((card, index) =>
-        supabase
+        db
           .from("ai_sites")
           .update({
-            category: card.dataset.category,
+            tags: JSON.parse(card.dataset.tags),
+            category: JSON.parse(card.dataset.tags)[0],
             sort_order: index + 1
           })
           .eq("id", card.dataset.id)
@@ -929,14 +1268,14 @@
     async function persistCategoryOrder() {
       if (isSavingCategoryOrder) return;
       isSavingCategoryOrder = true;
-      setStatus("正在同步分类顺序...");
+      setStatus("正在同步顶部分类顺序...");
 
-      const columns = [...siteBoard.querySelectorAll(".category-column")];
-      const updates = columns.map((column, index) =>
-        supabase
+      const chips = [...categoryTabs.querySelectorAll(".category-chip")];
+      const updates = chips.map((chip, index) =>
+        db
           .from("ai_categories")
           .update({ sort_order: index + 1 })
-          .eq("id", column.dataset.categoryId)
+          .eq("id", chip.dataset.categoryId)
       );
 
       const results = await Promise.all(updates);
@@ -949,7 +1288,7 @@
       }
 
       await loadAllData();
-      setStatus("分类顺序已同步。");
+      setStatus("顶部分类顺序已同步。");
     }
 
     function handleSiteDragStart(event) {
@@ -972,11 +1311,15 @@
       if (!draggedSite) return;
 
       const dropzone = event.currentTarget;
-      const empty = dropzone.querySelector(".empty-category");
+      const empty = dropzone.querySelector(".empty-column");
       if (empty) empty.remove();
 
       const target = event.target.closest(".site-card");
-      draggedSite.dataset.category = dropzone.dataset.category;
+      const currentTags = normalizeSiteTags(JSON.parse(draggedSite.dataset.tags || "[]"));
+      const nextTags = currentTags.includes(dropzone.dataset.category)
+        ? currentTags
+        : [...currentTags, dropzone.dataset.category];
+      draggedSite.dataset.tags = JSON.stringify(normalizeSiteTags(nextTags));
 
       if (!target || target === draggedSite) {
         dropzone.appendChild(draggedSite);
@@ -992,62 +1335,45 @@
       }
     }
 
-    function handleCategoryDragStart(event) {
-      if (event.target.closest("button")) {
-        event.preventDefault();
-        return;
-      }
-      draggedCategory = event.currentTarget.closest(".category-column");
-      draggedCategory.classList.add("dragging");
+    function handleChipDragStart(event) {
+      draggedChip = event.currentTarget;
+      draggedChip.classList.add("dragging");
       event.dataTransfer.effectAllowed = "move";
-      event.dataTransfer.setData("text/plain", draggedCategory.dataset.categoryId);
+      event.dataTransfer.setData("text/plain", draggedChip.dataset.categoryId);
     }
 
-    async function handleCategoryDragEnd() {
-      if (draggedCategory) {
-        draggedCategory.classList.remove("dragging");
-        const active = draggedCategory;
-        draggedCategory = null;
+    async function handleChipDragEnd(event) {
+      event.currentTarget.classList.remove("dragging");
+      if (draggedChip) {
         await persistCategoryOrder();
-        active.classList.remove("dragging");
       }
+      draggedChip = null;
     }
 
-    function handleCategoryDragOver(event) {
-      if (!draggedCategory || draggedSite) return;
+    function handleChipDragOver(event) {
       event.preventDefault();
-      const current = event.currentTarget;
-      if (current === draggedCategory) return;
-      const rect = current.getBoundingClientRect();
+      if (!draggedChip) return;
+
+      const target = event.currentTarget;
+      if (target === draggedChip) return;
+
+      const rect = target.getBoundingClientRect();
       const insertAfter = event.clientX > rect.left + rect.width / 2;
       if (insertAfter) {
-        siteBoard.insertBefore(draggedCategory, current.nextSibling);
+        categoryTabs.insertBefore(draggedChip, target.nextSibling);
       } else {
-        siteBoard.insertBefore(draggedCategory, current);
+        categoryTabs.insertBefore(draggedChip, target);
       }
     }
 
-    function handleCategoryDragEnter(event) {
-      if (!draggedCategory || draggedSite) return;
-      event.currentTarget.classList.add("drag-target");
-    }
-
-    function handleCategoryDragLeave(event) {
-      event.currentTarget.classList.remove("drag-target");
-    }
-
-    function handleCategoryDrop(event) {
-      event.currentTarget.classList.remove("drag-target");
-    }
-
-    async function insertSite(name, url, categoryName) {
+    async function insertSite(name, url, selectedTags) {
       const normalizedUrl = normalizeUrlForCompare(url);
       const normalizedDomain = normalizeDomainForCompare(url);
       if (!normalizedDomain) {
         throw new Error("网址格式不正确，无法识别域名。");
       }
 
-      const { data: existingSite, error: checkError } = await supabase
+      const { data: existingSite, error: checkError } = await db
         .from("ai_sites")
         .select("id, name, url")
         .eq("domain_normalized", normalizedDomain)
@@ -1058,18 +1384,22 @@
         throw new Error(`这个域名已经收录过了：${existingSite.name} (${existingSite.url})`);
       }
 
-      const category = await ensureCategoryExists(categoryName);
-      if (!category) {
-        throw new Error("无法创建或读取分类。");
+      const tags = normalizeSiteTags(selectedTags);
+      for (const tag of tags) {
+        const category = categoriesState.find((item) => item.name === tag);
+        if (!category) {
+          throw new Error(`标签不存在：${tag}`);
+        }
       }
 
       const currentCount = sitesState.length + 1;
-      const { error } = await supabase
+      const { error } = await db
         .from("ai_sites")
         .insert({
           name,
           url,
-          category: category.name,
+          category: tags[0],
+          tags,
           url_normalized: normalizedUrl,
           domain_normalized: normalizedDomain,
           sort_order: currentCount
@@ -1081,30 +1411,33 @@
         }
         throw error;
       }
+      tags.forEach((tag) => activateTag(tag));
     }
 
     async function saveSiteCategoryChange() {
       if (!editingSite) return;
-      const categoryName = normalizeCategory(modalCategoryInput.value);
+      const tags = getSelectedTags(modalTagSelector);
 
       try {
         modalSaveButton.disabled = true;
-        setStatus("正在更新网站分类...");
-        const category = await ensureCategoryExists(categoryName);
-        if (!category) throw new Error("分类创建失败。");
+        setStatus("正在更新网站标签...");
 
-        const { error } = await supabase
+        const { error } = await db
           .from("ai_sites")
-          .update({ category: category.name })
+          .update({
+            tags,
+            category: tags[0]
+          })
           .eq("id", editingSite.id);
 
         if (error) throw error;
 
+        tags.forEach((tag) => activateTag(tag));
+
         categoryModal.hidden = true;
         editingSite = null;
-        modalCategoryInput.value = "";
         await loadAllData();
-        setStatus("网站分类已更新。");
+        setStatus("网站标签已更新。");
       } catch (error) {
         setStatus(`更新失败：${error.message}`, true);
       } finally {
@@ -1117,7 +1450,10 @@
       try {
         newCategorySaveButton.disabled = true;
         setStatus("正在创建分类...");
-        await ensureCategoryExists(name);
+        const category = await ensureCategoryExists(name);
+        if (category) {
+          activateTag(category.name);
+        }
         newCategoryModal.hidden = true;
         newCategoryInput.value = "";
         await loadAllData();
@@ -1131,20 +1467,21 @@
 
     siteForm.addEventListener("submit", async (event) => {
       event.preventDefault();
-      if (!supabase) {
+      if (!db) {
         setStatus("Supabase 配置缺失。", true);
         return;
       }
 
       const url = normalizeUrl(siteUrlInput.value);
       const name = siteNameInput.value.trim() || inferSiteName(url);
-      const categoryName = normalizeCategory(siteCategoryInput.value);
+      const selectedTags = getSelectedTags(siteTagSelector);
 
       try {
         setSubmitLoading(true);
         setStatus("正在提交网站...");
-        await insertSite(name, url, categoryName);
+        await insertSite(name, url, selectedTags);
         siteForm.reset();
+        createTagSelector(siteTagSelector, ["其他"]);
         siteUrlInput.focus();
         await loadAllData();
         setStatus("网站已收录。");
@@ -1164,20 +1501,15 @@
     modalCancelButton.addEventListener("click", () => {
       editingSite = null;
       categoryModal.hidden = true;
-      modalCategoryInput.value = "";
     });
+
     modalSaveButton.addEventListener("click", saveSiteCategoryChange);
-    modalCategoryInput.addEventListener("keydown", (event) => {
-      if (event.key === "Enter") {
-        event.preventDefault();
-        saveSiteCategoryChange();
-      }
-    });
 
     newCategoryCancelButton.addEventListener("click", () => {
       newCategoryModal.hidden = true;
       newCategoryInput.value = "";
     });
+
     newCategorySaveButton.addEventListener("click", createCategoryFromModal);
     newCategoryInput.addEventListener("keydown", (event) => {
       if (event.key === "Enter") {
@@ -1200,7 +1532,7 @@
         return;
       }
 
-      supabase = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
+      db = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
       loadAllData();
     }
 
