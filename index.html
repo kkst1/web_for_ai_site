@@ -439,18 +439,13 @@
       align-content: start;
     }
 
-    .dropzone.drag-target {
-      background: rgba(74, 213, 255, 0.05);
-    }
-
     .site-card {
       position: relative;
-      padding: 18px;
+      padding: 14px;
       border-radius: 22px;
       border: 1px solid rgba(90, 160, 255, 0.16);
       background: linear-gradient(180deg, rgba(12, 28, 49, 0.96), rgba(8, 20, 37, 0.92));
       box-shadow: 0 16px 36px rgba(0, 0, 0, 0.24);
-      cursor: grab;
       user-select: none;
       transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
     }
@@ -461,13 +456,8 @@
       box-shadow: 0 20px 40px rgba(0, 0, 0, 0.32);
     }
 
-    .site-card.dragging {
-      opacity: 0.55;
-      transform: scale(0.985);
-    }
-
     .site-card::before {
-      content: "拖动网站";
+      content: "站点卡片";
       position: absolute;
       top: 14px;
       right: 14px;
@@ -481,15 +471,15 @@
     .site-name {
       margin: 0 0 12px;
       padding-right: 76px;
-      font-size: 1.08rem;
-      line-height: 1.5;
+      font-size: 0.98rem;
+      line-height: 1.4;
     }
 
     .site-link {
       color: #b6d8ff;
       text-decoration: none;
       word-break: break-all;
-      font-size: 0.94rem;
+      font-size: 0.88rem;
     }
 
     .site-link:hover {
@@ -497,30 +487,31 @@
     }
 
     .site-tags {
-      margin-top: 12px;
+      margin-top: 10px;
       display: flex;
       flex-wrap: wrap;
-      gap: 8px;
+      gap: 6px;
     }
 
     .site-tag {
       display: inline-flex;
-      padding: 5px 10px;
+      padding: 4px 8px;
       border-radius: 999px;
       background: rgba(111, 125, 255, 0.16);
       color: #c7ceff;
-      font-size: 0.78rem;
+      font-size: 0.72rem;
       font-weight: 700;
     }
 
     .site-meta {
-      margin-top: 14px;
+      margin-top: 12px;
       display: flex;
-      justify-content: space-between;
+      justify-content: flex-start;
+      flex-wrap: wrap;
       align-items: center;
-      gap: 12px;
+      gap: 8px;
       color: var(--muted);
-      font-size: 0.82rem;
+      font-size: 0.76rem;
     }
 
     .empty-state,
@@ -747,10 +738,9 @@
     let categoriesState = [];
     let sitesState = [];
     let activeTagQueue = ["Gemini"];
-    let draggedSite = null;
     let draggedChip = null;
     let editingSite = null;
-    let isSavingSiteOrder = false;
+    let isReorderingSites = false;
     let isSavingCategoryOrder = false;
 
     function setStatus(message, isError) {
@@ -906,6 +896,61 @@
       return normalizeSiteTags(selected);
     }
 
+    function rerenderView(message, isError) {
+      ensureActiveTagQueue();
+      refreshCategoryOptions();
+      renderTabs();
+      renderBoard();
+      if (message !== undefined) {
+        setStatus(message, isError);
+      }
+    }
+
+    async function reorderVisibleSites(mutateFn) {
+      if (isReorderingSites) return;
+
+      const currentTag = getVisibleCategories()[0];
+      if (!currentTag) return;
+
+      const visibleIds = [...siteBoard.querySelectorAll(".site-card")]
+        .map((card) => card.dataset.id)
+        .filter(Boolean);
+
+      const visibleSites = visibleIds
+        .map((id) => sitesState.find((site) => site.id === id))
+        .filter((site) => site && site.tags.includes(currentTag));
+
+      const nextSites = mutateFn([...visibleSites]);
+      if (!Array.isArray(nextSites) || nextSites.length === 0) return;
+
+      nextSites.forEach((site, index) => {
+        const target = sitesState.find((item) => item.id === site.id);
+        if (target) {
+          target.sort_order = index + 1;
+        }
+      });
+
+      isReorderingSites = true;
+      rerenderView("正在更新网站顺序...");
+
+      for (let index = 0; index < nextSites.length; index += 1) {
+        const site = nextSites[index];
+        const { error } = await db
+          .from("ai_sites")
+          .update({ sort_order: index + 1 })
+          .eq("id", site.id);
+
+        if (error) {
+          isReorderingSites = false;
+          setStatus(`排序更新失败：${error.message}`, true);
+          return;
+        }
+      }
+
+      isReorderingSites = false;
+      setStatus("网站顺序已更新。");
+    }
+
     async function ensureCategoryExists(name) {
       const categoryName = normalizeCategory(name);
       const existing = categoriesState.find((item) => item.name === categoryName);
@@ -928,7 +973,6 @@
 
       categoriesState.push(data);
       categoriesState.sort((a, b) => a.sort_order - b.sort_order);
-      refreshCategoryOptions();
       return data;
     }
 
@@ -1012,7 +1056,6 @@
     function createSiteCard(site) {
       const card = document.createElement("article");
       card.className = "site-card";
-      card.draggable = true;
       card.dataset.id = site.id;
       card.dataset.tags = JSON.stringify(normalizeSiteTags(site.tags));
 
@@ -1053,15 +1096,47 @@
         const normalized = newName.trim();
         if (!normalized || normalized === site.name) return;
 
-        setStatus("正在修改网站名称...");
+        const target = sitesState.find((item) => item.id === site.id);
+        if (target) {
+          target.name = normalized;
+        }
+        rerenderView("正在修改网站名称...");
         const { error } = await db.from("ai_sites").update({ name: normalized }).eq("id", site.id);
         if (error) {
           setStatus(`改名失败：${error.message}`, true);
           return;
         }
 
-        await loadAllData();
         setStatus("网站名称已更新。");
+      });
+
+      const moveUpButton = document.createElement("button");
+      moveUpButton.className = "secondary-button";
+      moveUpButton.type = "button";
+      moveUpButton.textContent = "↑ 上移";
+      moveUpButton.addEventListener("click", async (event) => {
+        event.stopPropagation();
+        await reorderVisibleSites((list) => {
+          const index = list.findIndex((item) => item.id === site.id);
+          if (index <= 0) return list;
+          [list[index - 1], list[index]] = [list[index], list[index - 1]];
+          return list;
+        });
+      });
+
+      const moveTopButton = document.createElement("button");
+      moveTopButton.className = "secondary-button";
+      moveTopButton.type = "button";
+      moveTopButton.textContent = "置顶";
+      moveTopButton.addEventListener("click", async (event) => {
+        event.stopPropagation();
+        await reorderVisibleSites((list) => {
+          const index = list.findIndex((item) => item.id === site.id);
+          if (index <= 0) return list;
+          const [target] = list.splice(index, 1);
+          list.unshift(target);
+          return list;
+        });
       });
 
       const deleteButton = document.createElement("button");
@@ -1073,7 +1148,8 @@
         const confirmed = window.confirm(`确认删除网站“${site.name}”？`);
         if (!confirmed) return;
         deleteButton.disabled = true;
-        setStatus("正在删除网站...");
+        sitesState = sitesState.filter((item) => item.id !== site.id);
+        rerenderView("正在删除网站...");
 
         const { error } = await db.from("ai_sites").delete().eq("id", site.id);
         if (error) {
@@ -1082,15 +1158,11 @@
           return;
         }
 
-        await loadAllData();
         setStatus("网站已删除。");
       });
 
-      meta.append(time, renameButton, deleteButton);
+      meta.append(time, renameButton, moveUpButton, moveTopButton, deleteButton);
       card.append(title, link, tags, meta);
-
-      card.addEventListener("dragstart", handleSiteDragStart);
-      card.addEventListener("dragend", handleSiteDragEnd);
       card.addEventListener("click", (event) => {
         if (event.target.closest("a") || event.target.closest("button")) return;
         editingSite = site;
@@ -1157,8 +1229,13 @@
         }
 
         const impactedSites = sitesState.filter((site) => site.tags.includes(categoryName));
+        categoriesState = categoriesState.map((item) =>
+          item.id === category.id ? { ...item, name: normalized } : item
+        );
         for (const site of impactedSites) {
           const nextTags = normalizeSiteTags(site.tags.map((tag) => tag === categoryName ? normalized : tag));
+          site.tags = nextTags;
+          site.category = nextTags[0];
           const { error } = await db.from("ai_sites").update({
             tags: nextTags,
             category: nextTags[0]
@@ -1170,9 +1247,7 @@
         }
 
         activeTagQueue = activeTagQueue.map((tag) => tag === categoryName ? normalized : tag);
-
-        await loadAllData();
-        setStatus("分类名已更新。");
+        rerenderView("分类名已更新。");
       });
 
       const deleteButton = document.createElement("button");
@@ -1185,11 +1260,11 @@
         const confirmed = window.confirm(`删除标签“${categoryName}”后，该标签会从 ${countSites} 个网站中移除；如果网站没有其他标签，会自动归入“其他”。继续吗？`);
         if (!confirmed) return;
 
-        setStatus("正在删除标签...");
-
         const impactedSites = sitesState.filter((site) => site.tags.includes(categoryName));
         for (const site of impactedSites) {
           const nextTags = normalizeSiteTags(site.tags.filter((tag) => tag !== categoryName));
+          site.tags = nextTags;
+          site.category = nextTags[0];
           const { error } = await db.from("ai_sites").update({
             tags: nextTags,
             category: nextTags[0]
@@ -1202,6 +1277,8 @@
 
         const category = categoriesState.find((item) => item.name === categoryName);
         if (!category) return;
+        categoriesState = categoriesState.filter((item) => item.id !== category.id);
+        rerenderView("正在删除标签...");
 
         const { error: categoryError } = await db.from("ai_categories").delete().eq("id", category.id);
         if (categoryError) {
@@ -1210,9 +1287,7 @@
         }
 
         activeTagQueue = activeTagQueue.filter((tag) => tag !== categoryName);
-
-        await loadAllData();
-        setStatus("标签已删除。");
+        rerenderView("标签已删除。");
       });
 
       actions.append(renameButton, deleteButton);
@@ -1221,12 +1296,10 @@
       const dropzone = document.createElement("div");
       dropzone.className = "dropzone";
       dropzone.dataset.category = categoryName;
-      dropzone.addEventListener("dragover", handleSiteDragOver);
-      dropzone.addEventListener("dragenter", () => dropzone.classList.add("drag-target"));
-      dropzone.addEventListener("dragleave", () => dropzone.classList.remove("drag-target"));
-      dropzone.addEventListener("drop", () => dropzone.classList.remove("drag-target"));
 
-      const sites = sitesState.filter((site) => site.tags.includes(categoryName));
+      const sites = sitesState
+        .filter((site) => site.tags.includes(categoryName))
+        .sort((a, b) => a.sort_order - b.sort_order || new Date(a.created_at) - new Date(b.created_at));
       if (sites.length === 0) {
         const empty = document.createElement("div");
         empty.className = "empty-column";
@@ -1253,36 +1326,6 @@
       updateEmptyState();
     }
 
-    async function persistSiteOrder() {
-      if (isSavingSiteOrder) return;
-      isSavingSiteOrder = true;
-      setStatus("正在同步网站排序...");
-
-      const cards = [...siteBoard.querySelectorAll(".site-card")];
-      const updates = cards.map((card, index) =>
-        db
-          .from("ai_sites")
-          .update({
-            tags: JSON.parse(card.dataset.tags),
-            category: JSON.parse(card.dataset.tags)[0],
-            sort_order: index + 1
-          })
-          .eq("id", card.dataset.id)
-      );
-
-      const results = await Promise.all(updates);
-      const failed = results.find((result) => result.error);
-      isSavingSiteOrder = false;
-
-      if (failed) {
-        setStatus(`网站排序同步失败：${failed.error.message}`, true);
-        return;
-      }
-
-      await loadAllData();
-      setStatus("网站排序已同步。");
-    }
-
     async function persistCategoryOrder() {
       if (isSavingCategoryOrder) return;
       isSavingCategoryOrder = true;
@@ -1307,50 +1350,6 @@
 
       await loadAllData();
       setStatus("顶部分类顺序已同步。");
-    }
-
-    function handleSiteDragStart(event) {
-      draggedSite = event.currentTarget;
-      draggedSite.classList.add("dragging");
-      event.dataTransfer.effectAllowed = "move";
-      event.dataTransfer.setData("text/plain", draggedSite.dataset.id);
-    }
-
-    async function handleSiteDragEnd(event) {
-      event.currentTarget.classList.remove("dragging");
-      if (draggedSite) {
-        await persistSiteOrder();
-      }
-      draggedSite = null;
-    }
-
-    function handleSiteDragOver(event) {
-      event.preventDefault();
-      if (!draggedSite) return;
-
-      const dropzone = event.currentTarget;
-      const empty = dropzone.querySelector(".empty-column");
-      if (empty) empty.remove();
-
-      const target = event.target.closest(".site-card");
-      const currentTags = normalizeSiteTags(JSON.parse(draggedSite.dataset.tags || "[]"));
-      const nextTags = currentTags.includes(dropzone.dataset.category)
-        ? currentTags
-        : [...currentTags, dropzone.dataset.category];
-      draggedSite.dataset.tags = JSON.stringify(normalizeSiteTags(nextTags));
-
-      if (!target || target === draggedSite) {
-        dropzone.appendChild(draggedSite);
-        return;
-      }
-
-      const rect = target.getBoundingClientRect();
-      const insertAfter = event.clientY > rect.top + rect.height / 2;
-      if (insertAfter) {
-        dropzone.insertBefore(draggedSite, target.nextSibling);
-      } else {
-        dropzone.insertBefore(draggedSite, target);
-      }
     }
 
     function handleChipDragStart(event) {
@@ -1410,7 +1409,7 @@
       }
 
       const currentCount = sitesState.length + 1;
-      const { error } = await db
+      const { data, error } = await db
         .from("ai_sites")
         .insert({
           name,
@@ -1420,7 +1419,9 @@
           url_normalized: normalizedUrl,
           domain_normalized: normalizeDomainForCompare(url),
           sort_order: currentCount
-        });
+        })
+        .select("id, name, url, category, tags, url_normalized, domain_normalized, sort_order, created_at")
+        .single();
 
       if (error) {
         if (error.code === "23505") {
@@ -1428,7 +1429,12 @@
         }
         throw error;
       }
-      tags.forEach((tag) => activateTag(tag));
+
+      sitesState.push({
+        ...data,
+        tags: normalizeSiteTags(data.tags)
+      });
+      activateTag(tags[0]);
     }
 
     async function saveSiteCategoryChange() {
@@ -1438,6 +1444,11 @@
       try {
         modalSaveButton.disabled = true;
         setStatus("正在更新网站标签...");
+        const target = sitesState.find((item) => item.id === editingSite.id);
+        if (target) {
+          target.tags = tags;
+          target.category = tags[0];
+        }
 
         const { error } = await db
           .from("ai_sites")
@@ -1449,12 +1460,11 @@
 
         if (error) throw error;
 
-        tags.forEach((tag) => activateTag(tag));
+        activateTag(tags[0]);
 
         categoryModal.hidden = true;
         editingSite = null;
-        await loadAllData();
-        setStatus("网站标签已更新。");
+        rerenderView("网站标签已更新。");
       } catch (error) {
         setStatus(`更新失败：${error.message}`, true);
       } finally {
@@ -1473,8 +1483,7 @@
         }
         newCategoryModal.hidden = true;
         newCategoryInput.value = "";
-        await loadAllData();
-        setStatus("分类已创建。");
+        rerenderView("分类已创建。");
       } catch (error) {
         setStatus(`创建分类失败：${error.message}`, true);
       } finally {
@@ -1500,8 +1509,7 @@
         siteForm.reset();
         createTagSelector(siteTagSelector, ["其他"]);
         siteUrlInput.focus();
-        await loadAllData();
-        setStatus("网站已收录。");
+        rerenderView("网站已收录。");
       } catch (error) {
         setStatus(`提交失败：${error.message}`, true);
       } finally {
