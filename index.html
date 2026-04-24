@@ -134,6 +134,19 @@
       word-break: break-all;
     }
 
+    .shop-link {
+      display: inline-block;
+      margin-top: 8px;
+      color: #b6d8ff;
+      text-decoration: none;
+      word-break: break-all;
+      line-height: 1.6;
+    }
+
+    .shop-link:hover {
+      text-decoration: underline;
+    }
+
     .sidebar-note {
       margin-top: 12px;
       font-size: 0.88rem;
@@ -432,20 +445,20 @@
     }
 
     .dropzone {
-      min-height: 180px;
-      padding: 16px;
+      min-height: 140px;
+      padding: 12px;
       display: grid;
-      gap: 14px;
+      gap: 10px;
       align-content: start;
     }
 
     .site-card {
       position: relative;
-      padding: 14px;
-      border-radius: 22px;
+      padding: 11px;
+      border-radius: 18px;
       border: 1px solid rgba(90, 160, 255, 0.16);
       background: linear-gradient(180deg, rgba(12, 28, 49, 0.96), rgba(8, 20, 37, 0.92));
-      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.24);
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.22);
       user-select: none;
       transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
     }
@@ -459,27 +472,27 @@
     .site-card::before {
       content: "站点卡片";
       position: absolute;
-      top: 14px;
-      right: 14px;
-      padding: 4px 9px;
+      top: 11px;
+      right: 11px;
+      padding: 3px 8px;
       border-radius: 999px;
       background: rgba(74, 213, 255, 0.1);
       color: var(--accent);
-      font-size: 0.74rem;
+      font-size: 0.68rem;
     }
 
     .site-name {
-      margin: 0 0 12px;
-      padding-right: 76px;
-      font-size: 0.98rem;
-      line-height: 1.4;
+      margin: 0 0 8px;
+      padding-right: 68px;
+      font-size: 0.9rem;
+      line-height: 1.3;
     }
 
     .site-link {
       color: #b6d8ff;
       text-decoration: none;
       word-break: break-all;
-      font-size: 0.88rem;
+      font-size: 0.8rem;
     }
 
     .site-link:hover {
@@ -487,31 +500,31 @@
     }
 
     .site-tags {
-      margin-top: 10px;
+      margin-top: 8px;
       display: flex;
       flex-wrap: wrap;
-      gap: 6px;
+      gap: 5px;
     }
 
     .site-tag {
       display: inline-flex;
-      padding: 4px 8px;
+      padding: 3px 7px;
       border-radius: 999px;
       background: rgba(111, 125, 255, 0.16);
       color: #c7ceff;
-      font-size: 0.72rem;
+      font-size: 0.68rem;
       font-weight: 700;
     }
 
     .site-meta {
-      margin-top: 12px;
+      margin-top: 9px;
       display: flex;
       justify-content: flex-start;
       flex-wrap: wrap;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
       color: var(--muted);
-      font-size: 0.76rem;
+      font-size: 0.72rem;
     }
 
     .empty-state,
@@ -618,6 +631,11 @@
       <div class="qq-card">
         <div class="qq-label">客服 QQ</div>
         <div class="qq-number">3968509102</div>
+      </div>
+
+      <div class="qq-card">
+        <div class="qq-label">店铺网址</div>
+        <a class="shop-link" href="https://example.com" target="_blank" rel="noopener noreferrer">https://pay.qxvx.cn/shop/aitoken</a>
       </div>
 
       <div class="sidebar-box">
@@ -740,8 +758,9 @@
     let activeTagQueue = ["Gemini"];
     let draggedChip = null;
     let editingSite = null;
-    let isReorderingSites = false;
     let isSavingCategoryOrder = false;
+    let orderSyncTimer = null;
+    let orderSyncPromise = Promise.resolve();
 
     function setStatus(message, isError) {
       statusNode.textContent = message || "";
@@ -816,6 +835,25 @@
       const safe = Array.isArray(tags) ? tags : [];
       const deduped = [...new Set(safe.map((tag) => normalizeCategory(tag)).filter(Boolean))];
       return deduped.length > 0 ? deduped : ["其他"];
+    }
+
+    function normalizeTagOrders(tagOrders, tags, sortOrder) {
+      const next = tagOrders && typeof tagOrders === "object" && !Array.isArray(tagOrders) ? { ...tagOrders } : {};
+      normalizeSiteTags(tags).forEach((tag) => {
+        const value = Number(next[tag]);
+        if (!Number.isFinite(value) || value < 1) {
+          next[tag] = Number(sortOrder) || 1;
+        }
+      });
+      return next;
+    }
+
+    function getSiteOrderForTag(site, tagName) {
+      const value = Number(site.tag_orders?.[tagName]);
+      if (Number.isFinite(value) && value > 0) {
+        return value;
+      }
+      return Number(site.sort_order) || Number.MAX_SAFE_INTEGER;
     }
 
     function ensureActiveTagQueue() {
@@ -897,8 +935,14 @@
     }
 
     function rerenderView(message, isError) {
+      const formSelectedTags = getSelectedTags(siteTagSelector);
+      const modalSelectedTags = categoryModal.hidden ? [] : getSelectedTags(modalTagSelector);
       ensureActiveTagQueue();
       refreshCategoryOptions();
+      createTagSelector(siteTagSelector, formSelectedTags);
+      if (!categoryModal.hidden && editingSite) {
+        createTagSelector(modalTagSelector, modalSelectedTags.length > 0 ? modalSelectedTags : editingSite.tags);
+      }
       renderTabs();
       renderBoard();
       if (message !== undefined) {
@@ -906,49 +950,63 @@
       }
     }
 
-    async function reorderVisibleSites(mutateFn) {
-      if (isReorderingSites) return;
+    function setLocalOrderForTag(tagName, orderedSites) {
+      orderedSites.forEach((site, index) => {
+        const target = sitesState.find((item) => item.id === site.id);
+        if (!target) return;
+        target.tag_orders = {
+          ...(target.tag_orders || {}),
+          [tagName]: index + 1
+        };
+      });
+    }
 
+    function scheduleTagOrderSync(tagName) {
+      clearTimeout(orderSyncTimer);
+      orderSyncTimer = setTimeout(() => {
+        orderSyncPromise = orderSyncPromise.then(async () => {
+          const orderedSites = sitesState
+            .filter((site) => site.tags.includes(tagName))
+            .sort((a, b) => getSiteOrderForTag(a, tagName) - getSiteOrderForTag(b, tagName));
+
+          const results = await Promise.all(
+            orderedSites.map((site) =>
+              db
+                .from("ai_sites")
+                .update({
+                  tag_orders: site.tag_orders,
+                  category: normalizeSiteTags(site.tags)[0]
+                })
+                .eq("id", site.id)
+            )
+          );
+
+          const failed = results.find((result) => result.error);
+          if (failed) {
+            await loadAllData();
+            setStatus(`排序同步失败：${failed.error.message}`, true);
+            return;
+          }
+
+          setStatus("网站顺序已同步。");
+        });
+      }, 180);
+    }
+
+    function reorderVisibleSites(mutateFn) {
       const currentTag = getVisibleCategories()[0];
       if (!currentTag) return;
 
-      const visibleIds = [...siteBoard.querySelectorAll(".site-card")]
-        .map((card) => card.dataset.id)
-        .filter(Boolean);
-
-      const visibleSites = visibleIds
-        .map((id) => sitesState.find((site) => site.id === id))
-        .filter((site) => site && site.tags.includes(currentTag));
+      const visibleSites = sitesState
+        .filter((site) => site.tags.includes(currentTag))
+        .sort((a, b) => getSiteOrderForTag(a, currentTag) - getSiteOrderForTag(b, currentTag));
 
       const nextSites = mutateFn([...visibleSites]);
       if (!Array.isArray(nextSites) || nextSites.length === 0) return;
 
-      nextSites.forEach((site, index) => {
-        const target = sitesState.find((item) => item.id === site.id);
-        if (target) {
-          target.sort_order = index + 1;
-        }
-      });
-
-      isReorderingSites = true;
-      rerenderView("正在更新网站顺序...");
-
-      for (let index = 0; index < nextSites.length; index += 1) {
-        const site = nextSites[index];
-        const { error } = await db
-          .from("ai_sites")
-          .update({ sort_order: index + 1 })
-          .eq("id", site.id);
-
-        if (error) {
-          isReorderingSites = false;
-          setStatus(`排序更新失败：${error.message}`, true);
-          return;
-        }
-      }
-
-      isReorderingSites = false;
-      setStatus("网站顺序已更新。");
+      setLocalOrderForTag(currentTag, nextSites);
+      rerenderView("顺序已更新，正在同步...");
+      scheduleTagOrderSync(currentTag);
     }
 
     async function ensureCategoryExists(name) {
@@ -987,7 +1045,7 @@
           .order("created_at", { ascending: true }),
         db
           .from("ai_sites")
-          .select("id, name, url, category, tags, sort_order, created_at")
+          .select("id, name, url, category, tags, tag_orders, sort_order, created_at")
           .order("sort_order", { ascending: true })
           .order("created_at", { ascending: true })
       ]);
@@ -1005,7 +1063,8 @@
       categoriesState = categories || [];
       sitesState = (sites || []).map((site) => ({
         ...site,
-        tags: normalizeSiteTags(site.tags)
+        tags: normalizeSiteTags(site.tags),
+        tag_orders: normalizeTagOrders(site.tag_orders, site.tags, site.sort_order)
       }));
       ensureActiveTagQueue();
       refreshCategoryOptions();
@@ -1114,9 +1173,9 @@
       moveUpButton.className = "secondary-button";
       moveUpButton.type = "button";
       moveUpButton.textContent = "↑ 上移";
-      moveUpButton.addEventListener("click", async (event) => {
+      moveUpButton.addEventListener("click", (event) => {
         event.stopPropagation();
-        await reorderVisibleSites((list) => {
+        reorderVisibleSites((list) => {
           const index = list.findIndex((item) => item.id === site.id);
           if (index <= 0) return list;
           [list[index - 1], list[index]] = [list[index], list[index - 1]];
@@ -1128,9 +1187,9 @@
       moveTopButton.className = "secondary-button";
       moveTopButton.type = "button";
       moveTopButton.textContent = "置顶";
-      moveTopButton.addEventListener("click", async (event) => {
+      moveTopButton.addEventListener("click", (event) => {
         event.stopPropagation();
-        await reorderVisibleSites((list) => {
+        reorderVisibleSites((list) => {
           const index = list.findIndex((item) => item.id === site.id);
           if (index <= 0) return list;
           const [target] = list.splice(index, 1);
@@ -1236,9 +1295,16 @@
           const nextTags = normalizeSiteTags(site.tags.map((tag) => tag === categoryName ? normalized : tag));
           site.tags = nextTags;
           site.category = nextTags[0];
+          const nextTagOrders = { ...(site.tag_orders || {}) };
+          if (Object.prototype.hasOwnProperty.call(nextTagOrders, categoryName)) {
+            nextTagOrders[normalized] = nextTagOrders[categoryName];
+            delete nextTagOrders[categoryName];
+          }
+          site.tag_orders = normalizeTagOrders(nextTagOrders, nextTags, site.sort_order);
           const { error } = await db.from("ai_sites").update({
             tags: nextTags,
-            category: nextTags[0]
+            category: nextTags[0],
+            tag_orders: site.tag_orders
           }).eq("id", site.id);
           if (error) {
             setStatus(`网站标签同步失败：${error.message}`, true);
@@ -1265,9 +1331,13 @@
           const nextTags = normalizeSiteTags(site.tags.filter((tag) => tag !== categoryName));
           site.tags = nextTags;
           site.category = nextTags[0];
+          const nextTagOrders = { ...(site.tag_orders || {}) };
+          delete nextTagOrders[categoryName];
+          site.tag_orders = normalizeTagOrders(nextTagOrders, nextTags, site.sort_order);
           const { error } = await db.from("ai_sites").update({
             tags: nextTags,
-            category: nextTags[0]
+            category: nextTags[0],
+            tag_orders: site.tag_orders
           }).eq("id", site.id);
           if (error) {
             setStatus(`网站标签移除失败：${error.message}`, true);
@@ -1299,7 +1369,7 @@
 
       const sites = sitesState
         .filter((site) => site.tags.includes(categoryName))
-        .sort((a, b) => a.sort_order - b.sort_order || new Date(a.created_at) - new Date(b.created_at));
+        .sort((a, b) => getSiteOrderForTag(a, categoryName) - getSiteOrderForTag(b, categoryName) || new Date(a.created_at) - new Date(b.created_at));
       if (sites.length === 0) {
         const empty = document.createElement("div");
         empty.className = "empty-column";
@@ -1409,6 +1479,10 @@
       }
 
       const currentCount = sitesState.length + 1;
+      const tagOrders = {};
+      tags.forEach((tag) => {
+        tagOrders[tag] = sitesState.filter((site) => site.tags.includes(tag)).length + 1;
+      });
       const { data, error } = await db
         .from("ai_sites")
         .insert({
@@ -1416,11 +1490,12 @@
           url,
           category: tags[0],
           tags,
+          tag_orders: tagOrders,
           url_normalized: normalizedUrl,
           domain_normalized: normalizeDomainForCompare(url),
           sort_order: currentCount
         })
-        .select("id, name, url, category, tags, url_normalized, domain_normalized, sort_order, created_at")
+        .select("id, name, url, category, tags, tag_orders, url_normalized, domain_normalized, sort_order, created_at")
         .single();
 
       if (error) {
@@ -1432,7 +1507,8 @@
 
       sitesState.push({
         ...data,
-        tags: normalizeSiteTags(data.tags)
+        tags: normalizeSiteTags(data.tags),
+        tag_orders: normalizeTagOrders(data.tag_orders, data.tags, data.sort_order)
       });
       activateTag(tags[0]);
     }
@@ -1445,16 +1521,26 @@
         modalSaveButton.disabled = true;
         setStatus("正在更新网站标签...");
         const target = sitesState.find((item) => item.id === editingSite.id);
+        const nextTagOrders = {};
+        tags.forEach((tag) => {
+          if (target?.tag_orders && Object.prototype.hasOwnProperty.call(target.tag_orders, tag)) {
+            nextTagOrders[tag] = target.tag_orders[tag];
+          } else {
+            nextTagOrders[tag] = sitesState.filter((site) => site.id !== editingSite.id && site.tags.includes(tag)).length + 1;
+          }
+        });
         if (target) {
           target.tags = tags;
           target.category = tags[0];
+          target.tag_orders = normalizeTagOrders(nextTagOrders, tags, target.sort_order);
         }
 
         const { error } = await db
           .from("ai_sites")
           .update({
             tags,
-            category: tags[0]
+            category: tags[0],
+            tag_orders: normalizeTagOrders(nextTagOrders, tags, editingSite.sort_order)
           })
           .eq("id", editingSite.id);
 
