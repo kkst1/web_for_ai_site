@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>十三的AI聚集站</title>
+  <style>
+    :root {
+      --panel: rgba(255, 248, 237, 0.92);
+      --card: #fffdf8;
+      --line: #d8c5a8;
+      --text: #2f2417;
+      --muted: #7b6650;
+      --accent: #c86b2f;
+      --accent-dark: #8e4314;
+      --danger: #9a3324;
+      --shadow: 0 18px 45px rgba(93, 62, 31, 0.14);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(255, 196, 122, 0.42), transparent 28%),
+        radial-gradient(circle at right 20%, rgba(202, 120, 59, 0.18), transparent 22%),
+        linear-gradient(135deg, #f8f3eb 0%, #efe4d1 100%);
+      padding: 40px 20px 56px;
+    }
+
+    .page {
+      max-width: 1080px;
+      margin: 0 auto;
+    }
+
+    .hero {
+      background: var(--panel);
+      border: 1px solid rgba(216, 197, 168, 0.8);
+      border-radius: 28px;
+      box-shadow: var(--shadow);
+      padding: 32px;
+      backdrop-filter: blur(10px);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(2.2rem, 5vw, 4rem);
+      line-height: 1.05;
+      letter-spacing: 0.04em;
+    }
+
+    .subtitle {
+      margin: 14px 0 0;
+      font-size: 1rem;
+      color: var(--muted);
+    }
+
+    .form-panel {
+      margin-top: 24px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 14px;
+      align-items: end;
+    }
+
+    label {
+      display: block;
+      font-size: 0.92rem;
+      margin-bottom: 8px;
+      color: var(--muted);
+    }
+
+    input {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 14px 16px;
+      font-size: 1rem;
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.95);
+      outline: none;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px rgba(200, 107, 47, 0.12);
+    }
+
+    button {
+      border: 0;
+      border-radius: 16px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .submit-button {
+      height: 52px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+      color: #fffaf4;
+      box-shadow: 0 14px 28px rgba(142, 67, 20, 0.22);
+    }
+
+    .status {
+      margin-top: 16px;
+      min-height: 24px;
+      font-size: 0.95rem;
+      color: var(--muted);
+    }
+
+    .status.error {
+      color: var(--danger);
+    }
+
+    .board {
+      margin-top: 28px;
+      display: grid;
+      gap: 18px;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    }
+
+    .site-card {
+      position: relative;
+      background: var(--card);
+      border: 1px solid rgba(216, 197, 168, 0.85);
+      border-radius: 22px;
+      box-shadow: var(--shadow);
+      padding: 18px 18px 16px;
+      cursor: grab;
+      user-select: none;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    }
+
+    .site-card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(200, 107, 47, 0.5);
+    }
+
+    .site-card.dragging {
+      opacity: 0.55;
+      cursor: grabbing;
+      transform: scale(0.98);
+    }
+
+    .site-card::before {
+      content: "拖动排序";
+      position: absolute;
+      top: 14px;
+      right: 16px;
+      font-size: 0.76rem;
+      color: var(--muted);
+      background: rgba(216, 197, 168, 0.22);
+      border-radius: 999px;
+      padding: 4px 10px;
+    }
+
+    .site-name {
+      margin: 0 0 12px;
+      padding-right: 72px;
+      font-size: 1.18rem;
+      line-height: 1.35;
+    }
+
+    .site-link {
+      color: var(--accent-dark);
+      text-decoration: none;
+      word-break: break-all;
+      font-size: 0.96rem;
+    }
+
+    .site-link:hover {
+      text-decoration: underline;
+    }
+
+    .site-meta {
+      margin-top: 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      color: var(--muted);
+      font-size: 0.82rem;
+    }
+
+    .delete-button {
+      padding: 8px 12px;
+      background: rgba(154, 51, 36, 0.08);
+      color: var(--danger);
+    }
+
+    .empty-state {
+      margin-top: 24px;
+      padding: 24px;
+      text-align: center;
+      color: var(--muted);
+      background: rgba(255, 253, 248, 0.7);
+      border: 1px dashed rgba(200, 107, 47, 0.35);
+      border-radius: 20px;
+    }
+
+    @media (max-width: 640px) {
+      body {
+        padding: 24px 14px 36px;
+      }
+
+      .hero {
+        padding: 22px;
+        border-radius: 22px;
+      }
+
+      .site-card::before {
+        position: static;
+        display: inline-block;
+        margin-bottom: 12px;
+      }
+
+      .site-name {
+        padding-right: 0;
+      }
+
+      .site-meta {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="hero">
+      <h1>十三的AI聚集站</h1>
+      <p class="subtitle">任何访问者提交的网站，都会写入 Supabase 并同步展示给所有人。</p>
+
+      <form class="form-panel" id="siteForm">
+        <div>
+          <label for="siteName">网站名字</label>
+          <input id="siteName" name="siteName" type="text" placeholder="例如：OpenAI">
+        </div>
+
+        <div>
+          <label for="siteUrl">网站网址</label>
+          <input id="siteUrl" name="siteUrl" type="url" placeholder="https://example.com" required>
+        </div>
+
+        <button class="submit-button" id="submitButton" type="submit">加入聚集站</button>
+      </form>
+
+      <div id="status" class="status" aria-live="polite"></div>
+    </section>
+
+    <section id="emptyState" class="empty-state">
+      还没有收录网站，先添加一个试试。
+    </section>
+
+    <section id="siteBoard" class="board" aria-live="polite"></section>
+  </main>
+
+  <script src="./site-config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const siteForm = document.getElementById("siteForm");
+    const siteBoard = document.getElementById("siteBoard");
+    const emptyState = document.getElementById("emptyState");
+    const siteNameInput = document.getElementById("siteName");
+    const siteUrlInput = document.getElementById("siteUrl");
+    const statusNode = document.getElementById("status");
+    const submitButton = document.getElementById("submitButton");
+
+    const config = window.APP_CONFIG || {};
+    const supabaseUrl = config.supabaseUrl;
+    const supabaseAnonKey = config.supabaseAnonKey;
+
+    let supabase = null;
+    let draggedCard = null;
+    let isPersistingOrder = false;
+
+    function setStatus(message, isError) {
+      statusNode.textContent = message || "";
+      statusNode.classList.toggle("error", Boolean(isError));
+    }
+
+    function setLoadingState(isLoading) {
+      submitButton.disabled = isLoading;
+      submitButton.textContent = isLoading ? "提交中..." : "加入聚集站";
+    }
+
+    function normalizeUrl(value) {
+      const trimmed = value.trim();
+      if (!trimmed) return "";
+      return /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+    }
+
+    function inferSiteName(url) {
+      try {
+        const { hostname } = new URL(url);
+        return hostname.replace(/^www\./i, "");
+      } catch {
+        return "未命名网站";
+      }
+    }
+
+    function updateEmptyState() {
+      emptyState.hidden = siteBoard.children.length > 0;
+    }
+
+    function formatTime(value) {
+      try {
+        return new Date(value).toLocaleString("zh-CN", {
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+          hour: "2-digit",
+          minute: "2-digit"
+        });
+      } catch {
+        return "";
+      }
+    }
+
+    function createCard(site) {
+      const card = document.createElement("article");
+      card.className = "site-card";
+      card.draggable = true;
+      card.dataset.id = site.id;
+
+      const title = document.createElement("h2");
+      title.className = "site-name";
+      title.textContent = site.name;
+
+      const link = document.createElement("a");
+      link.className = "site-link";
+      link.href = site.url;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      link.textContent = site.url;
+
+      const meta = document.createElement("div");
+      meta.className = "site-meta";
+
+      const timestamp = document.createElement("span");
+      timestamp.textContent = site.created_at ? `收录时间：${formatTime(site.created_at)}` : "已收录";
+
+      const deleteButton = document.createElement("button");
+      deleteButton.className = "delete-button";
+      deleteButton.type = "button";
+      deleteButton.textContent = "删除";
+      deleteButton.addEventListener("click", async () => {
+        if (!supabase) return;
+        deleteButton.disabled = true;
+        setStatus("正在删除...");
+
+        const { error } = await supabase
+          .from("ai_sites")
+          .delete()
+          .eq("id", site.id);
+
+        if (error) {
+          deleteButton.disabled = false;
+          setStatus(`删除失败：${error.message}`, true);
+          return;
+        }
+
+        card.remove();
+        updateEmptyState();
+        await persistOrder();
+        setStatus("已删除并同步。");
+      });
+
+      meta.append(timestamp, deleteButton);
+      card.append(title, link, meta);
+      card.addEventListener("dragstart", handleDragStart);
+      card.addEventListener("dragend", handleDragEnd);
+      return card;
+    }
+
+    function renderSites(sites) {
+      siteBoard.innerHTML = "";
+      sites.forEach((site) => {
+        siteBoard.appendChild(createCard(site));
+      });
+      updateEmptyState();
+    }
+
+    async function loadSites() {
+      if (!supabase) return;
+      setStatus("正在读取共享网站列表...");
+
+      const { data, error } = await supabase
+        .from("ai_sites")
+        .select("id, name, url, sort_order, created_at")
+        .order("sort_order", { ascending: true })
+        .order("created_at", { ascending: true });
+
+      if (error) {
+        setStatus(`读取失败：${error.message}`, true);
+        return;
+      }
+
+      renderSites(data || []);
+      setStatus(`已同步 ${data.length} 个网站。`);
+    }
+
+    async function persistOrder() {
+      if (!supabase || isPersistingOrder) return;
+
+      const cards = [...siteBoard.querySelectorAll(".site-card")];
+      if (cards.length === 0) return;
+
+      isPersistingOrder = true;
+      setStatus("正在同步排序...");
+
+      const updates = cards.map((card, index) =>
+        supabase
+          .from("ai_sites")
+          .update({ sort_order: index + 1 })
+          .eq("id", card.dataset.id)
+      );
+
+      const results = await Promise.all(updates);
+      const failed = results.find((result) => result.error);
+
+      isPersistingOrder = false;
+
+      if (failed) {
+        setStatus(`排序同步失败：${failed.error.message}`, true);
+        return;
+      }
+
+      setStatus("排序已同步到共享数据库。");
+    }
+
+    function handleDragStart(event) {
+      draggedCard = event.currentTarget;
+      draggedCard.classList.add("dragging");
+      event.dataTransfer.effectAllowed = "move";
+      event.dataTransfer.setData("text/plain", draggedCard.dataset.id || "");
+    }
+
+    async function handleDragEnd(event) {
+      event.currentTarget.classList.remove("dragging");
+      draggedCard = null;
+      await persistOrder();
+    }
+
+    function handleDragOver(event) {
+      event.preventDefault();
+      const targetCard = event.target.closest(".site-card");
+      if (!draggedCard || !targetCard || targetCard === draggedCard) return;
+
+      const rect = targetCard.getBoundingClientRect();
+      const shouldInsertAfter = event.clientY > rect.top + rect.height / 2;
+
+      if (shouldInsertAfter) {
+        siteBoard.insertBefore(draggedCard, targetCard.nextSibling);
+      } else {
+        siteBoard.insertBefore(draggedCard, targetCard);
+      }
+    }
+
+    async function insertSite(name, url) {
+      const currentCount = siteBoard.querySelectorAll(".site-card").length;
+
+      const { data, error } = await supabase
+        .from("ai_sites")
+        .insert({
+          name,
+          url,
+          sort_order: currentCount + 1
+        })
+        .select("id, name, url, sort_order, created_at")
+        .single();
+
+      if (error) {
+        throw error;
+      }
+
+      siteBoard.appendChild(createCard(data));
+      updateEmptyState();
+    }
+
+    siteBoard.addEventListener("dragover", handleDragOver);
+
+    siteForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+
+      if (!supabase) {
+        setStatus("Supabase 配置缺失，当前无法提交。", true);
+        return;
+      }
+
+      const url = normalizeUrl(siteUrlInput.value);
+      if (!url) {
+        setStatus("请输入有效网址。", true);
+        return;
+      }
+
+      const name = siteNameInput.value.trim() || inferSiteName(url);
+
+      try {
+        setLoadingState(true);
+        setStatus("正在提交到共享数据库...");
+        await insertSite(name, url);
+        siteForm.reset();
+        siteUrlInput.focus();
+        setStatus("网站已收录，所有访问者刷新后都能看到。");
+      } catch (error) {
+        setStatus(`提交失败：${error.message}`, true);
+      } finally {
+        setLoadingState(false);
+      }
+    });
+
+    function initialize() {
+      if (!supabaseUrl || !supabaseAnonKey) {
+        setStatus("缺少 Supabase 配置。请先设置环境变量后重新部署。", true);
+        return;
+      }
+
+      supabase = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
+      loadSites();
+    }
+
+    updateEmptyState();
+    initialize();
+  </script>
+</body>
+</html>
