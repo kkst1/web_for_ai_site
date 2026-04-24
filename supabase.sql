@@ -74,9 +74,10 @@ alter table public.ai_sites
 alter column domain_normalized set not null;
 
 drop index if exists ai_sites_url_normalized_key;
+drop index if exists ai_sites_domain_normalized_key;
 
-create unique index if not exists ai_sites_domain_normalized_key
-on public.ai_sites (domain_normalized);
+create unique index if not exists ai_sites_url_normalized_key
+on public.ai_sites (url_normalized);
 
 alter table public.ai_categories enable row level security;
 alter table public.ai_sites enable row level security;

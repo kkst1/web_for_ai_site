@@ -622,7 +622,7 @@
     <aside class="sidebar">
       <div class="brand">AI NAV HUB</div>
       <h2>十三的AI聚集站</h2>
-      <p>默认优先展示 Gemini 和 GPT。顶部标签可动态切换到“其他”或任意自定义分类，内容区会实时替换显示。</p>
+      <p>主页一次只显示一个当前标签。点击顶部任意标签时，内容区会立即切换到该标签对应的网站列表。</p>
 
       <div class="qq-card">
         <div class="qq-label">客服 QQ</div>
@@ -640,7 +640,7 @@
     <section class="main">
       <section class="hero">
         <h1>十三的AI聚集站</h1>
-        <p class="subtitle">共享收录、动态分类、暗黑科技风展示。默认显示 Gemini 和 GPT，点击顶部标签即可切到其他或自定义分类。</p>
+        <p class="subtitle">共享收录、动态标签、暗黑科技风展示。主页只显示一个标签，点击顶部标签即可切换当前展示内容。</p>
 
         <form id="siteForm" class="form-grid">
           <div>
@@ -662,7 +662,7 @@
         </form>
 
         <div class="toolbar">
-          <div class="hint">默认显示 `Gemini` 与 `GPT`。点击新标签时，会按“新的替换最旧的一个标签”动态切换主页展示。</div>
+          <div class="hint">主页只显示一个当前标签。点击顶部任意标签时，会立即切换到对应的网站列表。</div>
           <button id="addCategoryButton" class="secondary-button" type="button">新增分类</button>
         </div>
 
@@ -746,7 +746,7 @@
     let db = null;
     let categoriesState = [];
     let sitesState = [];
-    let activeTagQueue = ["Gemini", "GPT"];
+    let activeTagQueue = ["Gemini"];
     let draggedSite = null;
     let draggedChip = null;
     let editingSite = null;
@@ -800,12 +800,8 @@
       return trimmed || "其他";
     }
 
-    function inferSiteName(url) {
-      try {
-        return new URL(url).hostname.replace(/^www\./i, "");
-      } catch {
-        return "未命名网站";
-      }
+    function inferSiteName() {
+      return `ai超级站${sitesState.length + 1}`;
     }
 
     function formatTime(value) {
@@ -841,27 +837,25 @@
         if (names.includes("GPT")) queue.push("GPT");
       }
 
-      if (queue.length < 2) {
+      if (queue.length < 1) {
         names.forEach((name) => {
-          if (!queue.includes(name) && queue.length < 2) {
+          if (!queue.includes(name) && queue.length < 1) {
             queue.push(name);
           }
         });
       }
 
       if (queue.length === 0) {
-        queue = ["Gemini", "GPT"];
+        queue = ["Gemini"];
       }
 
-      activeTagQueue = queue.slice(0, 2);
+      activeTagQueue = queue.slice(-1);
       return activeTagQueue;
     }
 
     function activateTag(tagName) {
       if (!tagName) return;
-      const queue = ensureActiveTagQueue().filter((tag) => tag !== tagName);
-      queue.push(tagName);
-      activeTagQueue = queue.slice(-2);
+      activeTagQueue = [tagName];
     }
 
     function getVisibleCategories() {
@@ -1048,12 +1042,36 @@
       const time = document.createElement("span");
       time.textContent = site.created_at ? `收录时间：${formatTime(site.created_at)}` : "已收录";
 
+      const renameButton = document.createElement("button");
+      renameButton.className = "secondary-button";
+      renameButton.type = "button";
+      renameButton.textContent = "改名";
+      renameButton.addEventListener("click", async (event) => {
+        event.stopPropagation();
+        const newName = window.prompt("输入网站新名字", site.name);
+        if (newName === null) return;
+        const normalized = newName.trim();
+        if (!normalized || normalized === site.name) return;
+
+        setStatus("正在修改网站名称...");
+        const { error } = await db.from("ai_sites").update({ name: normalized }).eq("id", site.id);
+        if (error) {
+          setStatus(`改名失败：${error.message}`, true);
+          return;
+        }
+
+        await loadAllData();
+        setStatus("网站名称已更新。");
+      });
+
       const deleteButton = document.createElement("button");
       deleteButton.className = "danger-button";
       deleteButton.type = "button";
       deleteButton.textContent = "删除网站";
       deleteButton.addEventListener("click", async (event) => {
         event.stopPropagation();
+        const confirmed = window.confirm(`确认删除网站“${site.name}”？`);
+        if (!confirmed) return;
         deleteButton.disabled = true;
         setStatus("正在删除网站...");
 
@@ -1068,7 +1086,7 @@
         setStatus("网站已删除。");
       });
 
-      meta.append(time, deleteButton);
+      meta.append(time, renameButton, deleteButton);
       card.append(title, link, tags, meta);
 
       card.addEventListener("dragstart", handleSiteDragStart);
@@ -1368,20 +1386,19 @@
 
     async function insertSite(name, url, selectedTags) {
       const normalizedUrl = normalizeUrlForCompare(url);
-      const normalizedDomain = normalizeDomainForCompare(url);
-      if (!normalizedDomain) {
-        throw new Error("网址格式不正确，无法识别域名。");
+      if (!normalizedUrl) {
+        throw new Error("网址格式不正确。");
       }
 
       const { data: existingSite, error: checkError } = await db
         .from("ai_sites")
         .select("id, name, url")
-        .eq("domain_normalized", normalizedDomain)
+        .eq("url_normalized", normalizedUrl)
         .maybeSingle();
 
       if (checkError) throw checkError;
       if (existingSite) {
-        throw new Error(`这个域名已经收录过了：${existingSite.name} (${existingSite.url})`);
+        throw new Error(`这个网址已经收录过了：${existingSite.name} (${existingSite.url})`);
       }
 
       const tags = normalizeSiteTags(selectedTags);
@@ -1401,13 +1418,13 @@
           category: tags[0],
           tags,
           url_normalized: normalizedUrl,
-          domain_normalized: normalizedDomain,
+          domain_normalized: normalizeDomainForCompare(url),
           sort_order: currentCount
         });
 
       if (error) {
         if (error.code === "23505") {
-          throw new Error("这个域名已经收录过了，请不要重复添加。");
+          throw new Error("这个网址已经收录过了，请不要重复添加。");
         }
         throw error;
       }
@@ -1473,7 +1490,7 @@
       }
 
       const url = normalizeUrl(siteUrlInput.value);
-      const name = siteNameInput.value.trim() || inferSiteName(url);
+      const name = siteNameInput.value.trim() || inferSiteName();
       const selectedTags = getSelectedTags(siteTagSelector);
 
       try {
